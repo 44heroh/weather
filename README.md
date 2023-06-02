@@ -25,7 +25,7 @@ a. Для загрузки fixtures в БД запустить в консоли
 ```sh
 php bin/console doctrine:fixtures:load
 ```
-b. Перейти в браузере в http://localhost/admin    
+b. Перейти в браузере в http://localhost/admin login - test@test.test pasword - test   
 8.Импортировать данные можно 2 способами:    
 a. Перейти в браузере в http://localhost/weather/import    
 b. Или запустить в консоли внутри контейнера php-fpm команду 
