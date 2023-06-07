@@ -21,12 +21,12 @@ class ImportWeatherCommand extends Command
     /**
      * @var ImportWeatherService
      */
-    private $importWeatherService;
+    private ImportWeatherService $importWeatherService;
 
     /**
      * @var LoggerInterface
      */
-    private $logger;
+    private LoggerInterface $logger;
 
     /**
      * ImportWeatherCommand constructor.

@@ -3,8 +3,14 @@
 
 namespace App\Service;
 
+use App\Entity\Weather;
+use App\Objects\Coord;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\Validator\Validation;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Класс взаимодействия с api OpenWeather
@@ -16,51 +22,107 @@ class OpenWeatherApiService
     /**
      * @var ParameterBagInterface
      */
-    private $params;
+    private ParameterBagInterface $params;
+    /**
+     * @var SerializerInterface
+     */
+    private SerializerInterface $serializer;
+    /**
+     * @var HttpClientInterface
+     */
+    private HttpClientInterface $client;
 
     /**
      * OpenWeatherApiService constructor.
      * @param ParameterBagInterface $params
      */
-    public function __construct(ParameterBagInterface $params)
+    public function __construct(
+        ParameterBagInterface $params,
+        SerializerInterface $serializer,
+        HttpClientInterface $client
+    )
     {
         $this->params = $params;
+        $this->serializer = $serializer;
+        $this->client = $client;
     }
 
     /**
-     * @param array $options
+     * @param Coord $coord
+     * @return array
+     * @throws \Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface
+     * @throws \Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface
+     * @throws \Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface
+     * @throws \Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface
+     * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
      */
-    public function request(array $options) {
-        if (!isset($options['lat']) || !isset($options['lon']))
+    public function fetchForecastInfo(Coord $coord): mixed {
+        if (!$coord->getLat() || !$coord->getLon())
             throw new \Exception("not found lat or lon");
 
+//        dump($this->params->get('app.open.weather.forecast.url'));
         if($this->params->get('app.open.weather.forecast.url') == "")
             throw new \Exception("not found url");
 
+//        dump($this->params->get('app.open.weather.appid'));
         if($this->params->get('app.open.weather.appid') == "")
             throw new \Exception("not found appid");
 
         $url = $this->params->get('app.open.weather.forecast.url');
         $appId = $this->params->get('app.open.weather.appid');
 
-        $url = $url . "?" . http_build_query($options) . "&appid=" . $appId . "&units=metric";
-        $curl = curl_init();
+        $url = $url . "?" . "&lat=" . $coord->getLat() . "&lon=" . $coord->getLon() . "&appid=" . $appId . "&units=metric";
+//        dump($url);
 
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-        ));
+        $options = [
+            'headers' => [
+                'Accept' => 'application/json',
+            ],
+            'verify_host' => false,   // Verify the certificate's hostname against the requested hostname
+            'verify_peer' => false,   // Verify the certificate's authenticity against a trusted CA
+        ];
 
-        $response = curl_exec($curl);
+        $errors = [];
+        try {
+            $response = $this->client->request('GET', $url, $options);
+        } catch (TransportExceptionInterface $e) {
+            throw $e;
+        }
 
-        curl_close($curl);
+//        dump(get_class($response));
 
-        return json_decode($response);
+        $content = $response->getContent();
+        $content = $response->toArray();
+//        dump($content);
+
+        $validator = Validation::createValidator();
+        $constraints = new Assert\Collection([
+            'fields' => [
+                'cod' => new Assert\EqualTo('200'),
+                'list' => new Assert\NotNull(),
+            ],
+            'allowExtraFields' => true,
+            'allowMissingFields' => false
+        ]);
+
+        $violations = $validator->validate($content, $constraints);
+
+        $result = [];
+        if (count($violations) === 0) {
+            // Все поля прошли валидацию
+            $weathers = [];
+            foreach($content["list"] as $key => $value) {
+                $weathers[] = $this->serializer->denormalize($value, Weather::class);
+            }
+
+            return $weathers;
+        } else {
+            // Обнаружены ошибки валидации
+            foreach ($violations as $violation) {
+                $errors[] = $violation->getMessage();
+            }
+
+            return ["errors" => $errors];
+        }
     }
 }

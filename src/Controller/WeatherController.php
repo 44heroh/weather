@@ -15,12 +15,12 @@ class WeatherController extends AbstractController
     /**
      * @var ImportWeatherService
      */
-    private $importWeatherService;
+    private ImportWeatherService $importWeatherService;
 
     /**
      * @var LoggerInterface
      */
-    private $logger;
+    private LoggerInterface $logger;
 
     /**
      * WeatherController constructor.
@@ -36,8 +36,11 @@ class WeatherController extends AbstractController
     }
 
     // можно было отправить на exec команду отправить
-    #[Route(path: '/weather/import', name: 'articles', methods: ['GET'])]
-    public function import() {
+    /**
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    #[Route(path: '/weather/import', name: 'weathers-import', methods: ['GET'])]
+    public function import(): Response {
         $strExec = 'nohup php ../bin/console app:import-weather > /dev/null 2>&1 &';
 
         $output=null;

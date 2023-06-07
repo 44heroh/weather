@@ -5,6 +5,8 @@ namespace App\Service;
 
 
 use App\Entity\Weather;
+use App\Entity\City;
+use App\Objects\Coord;
 use App\Repository\CityRepository;
 use App\Repository\WeatherRepository;
 use Psr\Log\LoggerInterface;
@@ -15,27 +17,27 @@ class ImportWeatherService
     /**
      * @var EntityManagerInterface
      */
-    private $entityManager;
+    private EntityManagerInterface $entityManager;
 
     /**
      * @var OpenWeatherApiService
      */
-    private $openWeatherApiService;
+    private OpenWeatherApiService $openWeatherApiService;
 
     /**
      * @var WeatherRepository
      */
-    private $weatherRepository;
+    private WeatherRepository $weatherRepository;
 
     /**
      * @var CityRepository
      */
-    private $cityRepository;
+    private CityRepository $cityRepository;
 
     /**
      * @var LoggerInterface
      */
-    private $logger;
+    private LoggerInterface $logger;
 
     /**
      * ImportWeatherService constructor.
@@ -61,34 +63,28 @@ class ImportWeatherService
     }
 
 
-    public function import() {
+    public function import() : bool {
         $cities = $this->cityRepository->findAll();
 
         foreach ($cities as $city) {
             try {
-                $response[$city->getId()] = $this->openWeatherApiService->request(
-                    [
-                        "lat" => $city->getLat(),
-                        "lon" => $city->getLon()
-                    ]
+                $response = $this->openWeatherApiService->fetchForecastInfo(
+                    new Coord($city->getLat(), $city->getLon())
                 );
             } catch (\Exception $e) {
                 $this->logger->error($e->getMessage());
+                return false;
             }
-        }
 
-
-        foreach ($response as $key => $value) {
-            foreach ($value->list as $keyVal => $item) {
-                $weather = new Weather();
-                $weather->setTemperature($item->main->temp);
-                $weather->setClouds($item->clouds->all);
-                $weather->setDate(new \DateTime($item->dt_txt));
+            foreach ($response as $weather) {
+                $weather->setCity($city);
                 $this->entityManager->persist($weather);
-                $this->entityManager->flush();
             }
         }
 
-        return $response;
+        $this->entityManager->flush();
+
+        return true;
     }
+
 }

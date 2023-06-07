@@ -7,26 +7,32 @@ use App\Repository\CityRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: CityRepository::class)]
-#[ApiResource]
+#[ApiResource(normalizationContext: ['groups' => ['city:read']],denormalizationContext: ['groups' => ['city:write']])]
 class City
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['city:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['city:read'])]
     private ?string $name = null;
 
     #[ORM\OneToMany(mappedBy: 'city', targetEntity: Weather::class)]
+    #[Groups(['city:read'])]
     private Collection $weather;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['city:read'])]
     private ?float $lat = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['city:read'])]
     private ?float $lon = null;
 
     public function __construct()
@@ -103,5 +109,11 @@ class City
         $this->lon = $lon;
 
         return $this;
+    }
+
+    public function __toString(): string
+    {
+        // TODO: Implement __toString() method.
+        return $this->getName();
     }
 }
