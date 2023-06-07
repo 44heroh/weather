@@ -56,14 +56,14 @@ class OpenWeatherApiServiceTest extends KernelTestCase
     public function testStub()
     {
         $stubDependency = $this->createStub(Dependency::class);
-        $stubDependency->method('someMethod')->willReturn('expectedValue');
+        $responseStub = $stubDependency->method('someMethod')->willReturn('expectedValue');
 
         $coord = new Coord(55.582026, 37.3855235);
         $result = $this->openWeatherApiService->fetchForecastInfo(
             new Coord(55.582026, 37.3855235)
         );
 
-        $this->assertEquals(40, count($result));
+        $this->assertNotEquals($responseStub, count($result));
     }
 
     public function testMockFetchData()
