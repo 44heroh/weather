@@ -69,14 +69,17 @@ class OpenWeatherApiService
      */
     public function fetchForecastInfo(Coord $coord): array
     {
-        if (!$coord->getLat() || !$coord->getLon())
+        if (!$coord->getLat() || !$coord->getLon()) {
             throw new \Exception("not found lat or lon");
+        }
 
-        if($this->params->getUrl() == null)
+        if ($this->params->getUrl() == null) {
             throw new \Exception("not found url");
+        }
 
-        if($this->params->getAppid() == null)
+        if ($this->params->getAppid() == null) {
             throw new \Exception("not found appid");
+        }
 
         $url = $this->params->getUrl();
         $appId = $this->params->getAppid();
