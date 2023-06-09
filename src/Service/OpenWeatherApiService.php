@@ -67,7 +67,8 @@ class OpenWeatherApiService
      * @throws \Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface
      * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
      */
-    public function fetchForecastInfo(Coord $coord): mixed {
+    public function fetchForecastInfo(Coord $coord): array
+    {
         if (!$coord->getLat() || !$coord->getLon())
             throw new \Exception("not found lat or lon");
 
@@ -113,7 +114,6 @@ class OpenWeatherApiService
 
         $violations = $validator->validate($content, $constraints);
 
-        $result = [];
         if (count($violations) === 0) {
             // Все поля прошли валидацию
             $weathers = [];
