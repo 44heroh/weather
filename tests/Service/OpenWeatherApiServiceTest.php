@@ -88,7 +88,7 @@ class OpenWeatherApiServiceTest extends KernelTestCase
             ->willReturn($mockResponse)
             ;
 
-        $service = new OpenWeatherApiService($this->parameterBag, $this->serializer, $mockHttpClient);
+        $service = new OpenWeatherApiService($this->parameterBag, $this->serializer, $mockHttpClient, $this->logger);
         $ansMock = $service->fetchForecastInfo($coord);
 
         if(!isset($ansMock['errors'])) {

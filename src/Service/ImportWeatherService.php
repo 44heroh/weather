@@ -73,7 +73,7 @@ class ImportWeatherService
                 );
             } catch (\Exception $e) {
                 $this->logger->error($e->getMessage());
-                return false;
+                throw $e;
             }
 
             foreach ($response as $weather) {

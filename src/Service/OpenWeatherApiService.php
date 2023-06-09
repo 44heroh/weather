@@ -5,6 +5,7 @@ namespace App\Service;
 
 use App\Entity\Weather;
 use App\Objects\Coord;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Validator\Validation;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
@@ -31,6 +32,10 @@ class OpenWeatherApiService
      * @var HttpClientInterface
      */
     private HttpClientInterface $client;
+    /**
+     * @var LoggerInterface
+     */
+    private LoggerInterface $logger;
 
     /**
      * OpenWeatherApiService constructor.
@@ -39,12 +44,14 @@ class OpenWeatherApiService
     public function __construct(
         ParameterBagInterface $params,
         SerializerInterface $serializer,
-        HttpClientInterface $client
+        HttpClientInterface $client,
+        LoggerInterface $logger
     )
     {
         $this->params = $params;
         $this->serializer = $serializer;
         $this->client = $client;
+        $this->logger = $logger;
     }
 
     /**
@@ -60,11 +67,9 @@ class OpenWeatherApiService
         if (!$coord->getLat() || !$coord->getLon())
             throw new \Exception("not found lat or lon");
 
-//        dump($this->params->get('app.open.weather.forecast.url'));
         if($this->params->get('app.open.weather.forecast.url') == "")
             throw new \Exception("not found url");
 
-//        dump($this->params->get('app.open.weather.appid'));
         if($this->params->get('app.open.weather.appid') == "")
             throw new \Exception("not found appid");
 
@@ -72,7 +77,6 @@ class OpenWeatherApiService
         $appId = $this->params->get('app.open.weather.appid');
 
         $url = $url . "?" . "&lat=" . $coord->getLat() . "&lon=" . $coord->getLon() . "&appid=" . $appId . "&units=metric";
-//        dump($url);
 
         $options = [
             'headers' => [
@@ -86,14 +90,12 @@ class OpenWeatherApiService
         try {
             $response = $this->client->request('GET', $url, $options);
         } catch (TransportExceptionInterface $e) {
+            $this->logger->error($e->getMessage());
             throw $e;
         }
 
-//        dump(get_class($response));
-
         $content = $response->getContent();
         $content = $response->toArray();
-//        dump($content);
 
         $validator = Validation::createValidator();
         $constraints = new Assert\Collection([
@@ -119,6 +121,7 @@ class OpenWeatherApiService
         } else {
             // Обнаружены ошибки валидации
             foreach ($violations as $violation) {
+                $this->logger->warning($violation->getMessage());
                 $errors[] = $violation->getMessage();
             }
 
