@@ -6,13 +6,11 @@ namespace App\Service;
 use App\Config\WeatherParams;
 use App\Entity\Weather;
 use App\Objects\Coord;
+use App\Validator\WeatherValidator;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\Validator\Validation;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Класс взаимодействия с api OpenWeather
@@ -37,6 +35,10 @@ class OpenWeatherApiService
      * @var LoggerInterface
      */
     private LoggerInterface $logger;
+    /**
+     * @var WeatherValidator
+     */
+    private WeatherValidator $weatherValidator;
 
     /**
      * OpenWeatherApiService constructor.
@@ -44,18 +46,21 @@ class OpenWeatherApiService
      * @param SerializerInterface $serializer
      * @param HttpClientInterface $client
      * @param LoggerInterface $logger
+     * @param WeatherValidator $weatherValidator
      */
     public function __construct(
         WeatherParams $params,
         SerializerInterface $serializer,
         HttpClientInterface $client,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        WeatherValidator $weatherValidator
     )
     {
         $this->params = $params;
         $this->serializer = $serializer;
         $this->client = $client;
         $this->logger = $logger;
+        $this->weatherValidator = $weatherValidator;
     }
 
     /**
@@ -92,17 +97,7 @@ class OpenWeatherApiService
 
         $content = $response->toArray();
 
-        $validator = Validation::createValidator();
-        $constraints = new Assert\Collection([
-            'fields' => [
-                'cod' => new Assert\EqualTo('200'),
-                'list' => new Assert\NotNull(),
-            ],
-            'allowExtraFields' => true,
-            'allowMissingFields' => false
-        ]);
-
-        $violations = $validator->validate($content, $constraints);
+        $violations = $this->weatherValidator->validate($content);
 
         if (count($violations) === 0) {
             // Все поля прошли валидацию

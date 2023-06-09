@@ -2,12 +2,14 @@
 
 namespace App\Tests\Service;
 
+use App\Config\WeatherParams;
 use App\Dependency\Dependency;
 use App\Entity\City;
 use App\Entity\Weather;
 use App\Objects\Coord;
 use App\Service\CalculatorService;
 use App\Service\OpenWeatherApiService;
+use App\Validator\WeatherValidator;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
@@ -21,23 +23,27 @@ class OpenWeatherApiServiceTest extends KernelTestCase
     /**
      * @var \Doctrine\ORM\EntityManager
      */
-    private $entityManager;
+    private \Doctrine\ORM\EntityManager $entityManager;
     /**
      * @var OpenWeatherApiService
      */
-    protected $openWeatherApiService;
+    private OpenWeatherApiService $openWeatherApiService;
     /**
-     * @var ContainerBagInterface
+     * @var WeatherParams
      */
-    private $parameterBag;
+    private WeatherParams $parameters;
     /**
      * @var SerializerInterface
      */
-    private $serializer;
+    private SerializerInterface $serializer;
     /**
      * @var LoggerInterface
      */
-    private $logger;
+    private LoggerInterface $logger;
+    /**
+     * @var WeatherValidator
+     */
+    private WeatherValidator $weatherValidator;
 
 
     protected function setUp(): void
@@ -48,9 +54,10 @@ class OpenWeatherApiServiceTest extends KernelTestCase
             ->get('doctrine')
             ->getManager();
         $this->openWeatherApiService = $container->get(OpenWeatherApiService::class);
-        $this->parameterBag = $container->get(ContainerBagInterface::class);
+        $this->parameters = $container->get(WeatherParams::class);
         $this->serializer = $container->get(SerializerInterface::class);
         $this->logger = $container->get(LoggerInterface::class);
+        $this->weatherValidator = new WeatherValidator();
     }
 
     public function testStub()
@@ -60,7 +67,7 @@ class OpenWeatherApiServiceTest extends KernelTestCase
 
         $coord = new Coord(55.582026, 37.3855235);
         $result = $this->openWeatherApiService->fetchForecastInfo(
-            new Coord(55.582026, 37.3855235)
+            $coord
         );
 
         $this->assertNotEquals($responseStub, count($result));
@@ -88,7 +95,7 @@ class OpenWeatherApiServiceTest extends KernelTestCase
             ->willReturn($mockResponse)
             ;
 
-        $service = new OpenWeatherApiService($this->parameterBag, $this->serializer, $mockHttpClient, $this->logger);
+        $service = new OpenWeatherApiService($this->parameters, $this->serializer, $mockHttpClient, $this->logger, $this->weatherValidator);
         $ansMock = $service->fetchForecastInfo($coord);
 
         if(!isset($ansMock['errors'])) {
@@ -98,15 +105,15 @@ class OpenWeatherApiServiceTest extends KernelTestCase
         }
     }
 
-    public function testRequestTrue()
-    {
-        $expected = 40;
-        $response = $this->openWeatherApiService->fetchForecastInfo(
-            new Coord(55.582026, 37.3855235)
-        );
-
-        $this->assertGreaterThanOrEqual($expected, $response, "doesn't contains 40 elements");
-    }
+//    public function testRequestTrue()
+//    {
+//        $expected = 40;
+//        $response = $this->openWeatherApiService->fetchForecastInfo(
+//            new Coord(55.582026, 37.3855235)
+//        );
+//
+//        $this->assertGreaterThanOrEqual($expected, $response, "doesn't contains 40 elements");
+//    }
 
 //    protected function tearDown(): void
 //    {

@@ -9,7 +9,13 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 class WeatherParams
 {
+    /**
+     * @var string
+     */
     private string $url;
+    /**
+     * @var string
+     */
     private string $appid;
 
     /**
