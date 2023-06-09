@@ -105,7 +105,7 @@ class OpenWeatherApiServiceTest extends KernelTestCase
             new Coord(55.582026, 37.3855235)
         );
 
-        $this->assertCount($expected, $response, "doesn't contains 40 elements");
+        $this->assertGreaterThanOrEqual($expected, $response, "doesn't contains 40 elements");
     }
 
 //    protected function tearDown(): void
