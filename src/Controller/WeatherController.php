@@ -40,7 +40,8 @@ class WeatherController extends AbstractController
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     #[Route(path: '/weather/import', name: 'weathers-import', methods: ['GET'])]
-    public function import(): Response {
+    public function import(): Response
+    {
         $strExec = 'nohup php ../bin/console app:import-weather > /dev/null 2>&1 &';
 
         $output=null;

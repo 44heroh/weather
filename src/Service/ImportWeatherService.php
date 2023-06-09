@@ -63,7 +63,8 @@ class ImportWeatherService
     }
 
 
-    public function import() : bool {
+    public function import() : bool
+    {
         $cities = $this->cityRepository->findAll();
 
         foreach ($cities as $city) {
