@@ -38,6 +38,8 @@ php bin/phpunit
 ```
 10.Можно зайти в браузере и запустить http://localhost/api/weather.json
 
+для теста
+
 Админка выглядит так: 
 
 ![Иллюстрация к проекту](https://img001.prntscr.com/file/img001/yeogF1HNTMKSatcM1QSBIw.png)
