@@ -3,6 +3,7 @@
 
 namespace App\Service;
 
+use App\Config\WeatherParams;
 use App\Entity\Weather;
 use App\Objects\Coord;
 use Psr\Log\LoggerInterface;
@@ -21,9 +22,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 class OpenWeatherApiService
 {
     /**
-     * @var ParameterBagInterface
+     * @var WeatherParams
      */
-    private ParameterBagInterface $params;
+    private WeatherParams $params;
     /**
      * @var SerializerInterface
      */
@@ -39,10 +40,13 @@ class OpenWeatherApiService
 
     /**
      * OpenWeatherApiService constructor.
-     * @param ParameterBagInterface $params
+     * @param WeatherParams $params
+     * @param SerializerInterface $serializer
+     * @param HttpClientInterface $client
+     * @param LoggerInterface $logger
      */
     public function __construct(
-        ParameterBagInterface $params,
+        WeatherParams $params,
         SerializerInterface $serializer,
         HttpClientInterface $client,
         LoggerInterface $logger
@@ -67,14 +71,14 @@ class OpenWeatherApiService
         if (!$coord->getLat() || !$coord->getLon())
             throw new \Exception("not found lat or lon");
 
-        if($this->params->get('app.open.weather.forecast.url') == "")
+        if($this->params->getUrl() == null)
             throw new \Exception("not found url");
 
-        if($this->params->get('app.open.weather.appid') == "")
+        if($this->params->getAppid() == null)
             throw new \Exception("not found appid");
 
-        $url = $this->params->get('app.open.weather.forecast.url');
-        $appId = $this->params->get('app.open.weather.appid');
+        $url = $this->params->getUrl();
+        $appId = $this->params->getAppid();
 
         $url = $url . "?" . "&lat=" . $coord->getLat() . "&lon=" . $coord->getLon() . "&appid=" . $appId . "&units=metric";
 
@@ -94,7 +98,7 @@ class OpenWeatherApiService
             throw $e;
         }
 
-        $content = $response->getContent();
+//        $content = $response->getContent();
         $content = $response->toArray();
 
         $validator = Validation::createValidator();
