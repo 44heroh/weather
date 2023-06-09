@@ -26,7 +26,7 @@ class WeatherParams
     /**
      * @return string
      */
-    public function getUrl()
+    public function getUrl(): string
     {
         return $this->url;
     }
@@ -34,7 +34,7 @@ class WeatherParams
     /**
      * @param string $url
      */
-    public function setUrl($url)
+    public function setUrl($url): void
     {
         $this->url = $url;
     }
@@ -42,7 +42,7 @@ class WeatherParams
     /**
      * @return string
      */
-    public function getAppid()
+    public function getAppid(): string
     {
         return $this->appid;
     }
@@ -50,7 +50,7 @@ class WeatherParams
     /**
      * @param string $appid
      */
-    public function setAppid($appid)
+    public function setAppid($appid): void
     {
         $this->appid = $appid;
     }
