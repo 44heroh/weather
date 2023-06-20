@@ -101,10 +101,13 @@ class OpenWeatherApiService
 
         if (count($violations) === 0) {
             // Все поля прошли валидацию
-            $weathers = [];
-            foreach($content["list"] as $key => $value) {
-                $weathers[] = $this->serializer->denormalize($value, Weather::class);
-            }
+            // Денормализация для одного объекта
+//            $weathers = [];
+//            foreach($content["list"] as $key => $value) {
+//                $weathers[] = $this->serializer->denormalize($value, Weather::class);
+//            }
+            // Денормализация для массива объектов
+            $weathers = $this->serializer->denormalize($content, Weather::class);
 
             return $weathers;
         } else {

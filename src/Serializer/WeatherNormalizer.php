@@ -23,7 +23,7 @@ class WeatherNormalizer implements DenormalizerInterface
      */
     public function supportsDenormalization(mixed $data, string $type, string $format = null): bool
     {
-        return Weather::class == $type;
+        return Weather::class == $type || isset($data["list"]);
     }
 
     /**
@@ -34,7 +34,46 @@ class WeatherNormalizer implements DenormalizerInterface
      * @return Weather|mixed
      * @throws \Exception
      */
-    public function denormalize(mixed $data, string $type, string $format = null, array $context = []): Weather
+    public function denormalize(mixed $data, string $type, string $format = null, array $context = []): array|Weather
+    {
+        if(isset($data["list"])) {
+            $weathers = $this->denormalizeToArrayObjects($data);
+            return $weathers;
+        } else {
+            $weather = $this->denormalizeToObject($data);
+            return $weather;
+        }
+    }
+
+    /**
+     * @param mixed $data
+     */
+    public function denormalizeToArrayObjects(mixed $data): array
+    {
+        if(isset($data["list"])) {
+            $weathers = [];
+            foreach($data["list"] as $key => $value) {
+                $weather = new Weather();
+                if(isset($value["dt_txt"]))
+                    $weather->setDate(new \DateTime($value["dt_txt"]));
+                if(isset($value["main"]["temp"]))
+                    $weather->setTemperature($value["main"]["temp"]);
+                if($value["clouds"]["all"])
+                    $weather->setClouds($value["clouds"]["all"]);
+
+                $weathers[] = $weather;
+            }
+
+            return $weathers;
+        }
+    }
+
+    /**
+     * @param mixed $data
+     * @return Weather
+     * @throws \Exception
+     */
+    public function denormalizeToObject(mixed $data): Weather
     {
         $weather = new Weather();
         if(isset($data["dt_txt"]))
