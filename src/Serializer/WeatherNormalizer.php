@@ -53,15 +53,7 @@ class WeatherNormalizer implements DenormalizerInterface
         if(isset($data["list"])) {
             $weathers = [];
             foreach($data["list"] as $key => $value) {
-                $weather = new Weather();
-                if(isset($value["dt_txt"]))
-                    $weather->setDate(new \DateTime($value["dt_txt"]));
-                if(isset($value["main"]["temp"]))
-                    $weather->setTemperature($value["main"]["temp"]);
-                if($value["clouds"]["all"])
-                    $weather->setClouds($value["clouds"]["all"]);
-
-                $weathers[] = $weather;
+                $weathers[] = self::denormalizeToObject($value);
             }
 
             return $weathers;
@@ -80,8 +72,12 @@ class WeatherNormalizer implements DenormalizerInterface
             $weather->setDate(new \DateTime($data["dt_txt"]));
         if(isset($data["main"]["temp"]))
             $weather->setTemperature($data["main"]["temp"]);
-        if($data["clouds"]["all"])
+        if(isset($data["clouds"]["all"]))
             $weather->setClouds($data["clouds"]["all"]);
+        if(isset($data["visibility"]))
+            $weather->setVisibility($data["visibility"]);
+        if(isset($data["pop"]))
+            $weather->setPop($data["pop"]);
 
         return $weather;
     }

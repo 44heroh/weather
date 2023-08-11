@@ -9,7 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: WeatherRepository::class)]
-#[ApiResource]
+#[ApiResource(normalizationContext: ['groups' => ['weather:read']],denormalizationContext: ['groups' => ['weather:write']])]
 class Weather
 {
     #[ORM\Id]
@@ -31,8 +31,16 @@ class Weather
     private ?float $clouds = null;
 
     #[ORM\ManyToOne(inversedBy: 'weather')]
-    #[Groups(['city:read', 'weather:read'])]
+    #[Groups(['weather:read'])]
     private ?City $city = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Groups(['city:read', 'weather:read'])]
+    private ?int $visibility = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Groups(['city:read', 'weather:read'])]
+    private ?int $pop = null;
 
     public function getId(): ?int
     {
@@ -83,6 +91,30 @@ class Weather
     public function setCity(?City $city): self
     {
         $this->city = $city;
+
+        return $this;
+    }
+
+    public function getVisibility(): ?int
+    {
+        return $this->visibility;
+    }
+
+    public function setVisibility(?int $visibility): self
+    {
+        $this->visibility = $visibility;
+
+        return $this;
+    }
+
+    public function getPop(): ?int
+    {
+        return $this->pop;
+    }
+
+    public function setPop(?int $pop): self
+    {
+        $this->pop = $pop;
 
         return $this;
     }

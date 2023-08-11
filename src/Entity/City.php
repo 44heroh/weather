@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
+use function ApiPlatform\JsonSchema\Tests\Fixtures\Enum\getId;
 
 #[ORM\Entity(repositoryClass: CityRepository::class)]
 #[ApiResource(normalizationContext: ['groups' => ['city:read']],denormalizationContext: ['groups' => ['city:write']])]
@@ -16,11 +17,11 @@ class City
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['city:read'])]
+    #[Groups(['weather:read', 'city:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['city:read'])]
+    #[Groups(['weather:read', 'city:read'])]
     private ?string $name = null;
 
     #[ORM\OneToMany(mappedBy: 'city', targetEntity: Weather::class)]
@@ -109,11 +110,5 @@ class City
         $this->lon = $lon;
 
         return $this;
-    }
-
-    public function __toString(): string
-    {
-        // TODO: Implement __toString() method.
-        return $this->getName();
     }
 }
